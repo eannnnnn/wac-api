@@ -20,7 +20,7 @@ jobs:
 
   e2e-test:
     runs-on: self-hosted
-    needs: build
+    needs: install
     steps:
       - name: Test
         run: |
