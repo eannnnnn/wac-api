@@ -18,6 +18,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+  prisma-generate:
+    runs-on: self-hosted
+    needs: checkout
+    steps:
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
   set-env:
     runs-on: self-hosted
     needs: checkout
@@ -36,7 +43,7 @@ jobs:
 
   e2e-test:
     runs-on: self-hosted
-    needs: [install, set-env]
+    needs: [install, set-env, prisma-generate]
     steps:
       - name: Test
         run: pnpm run test:e2e
