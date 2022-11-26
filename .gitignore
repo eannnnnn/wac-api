@@ -396,3 +396,7 @@ Temporary Items
 # Local
 .env
 dist
+
+env/*
+# 제외
+!.env.template
