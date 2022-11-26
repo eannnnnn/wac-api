@@ -9,7 +9,7 @@ jobs:
     if: github.event.pull_request.merged
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
   install:
     runs-on: self-hosted
@@ -18,26 +18,46 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+  prisma-generate:
+    runs-on: self-hosted
+    needs: checkout
+    steps:
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+  set-env:
+    runs-on: self-hosted
+    needs: checkout
+    steps:
+      - name: Generate Env File
+        env:
+          SERVER_PORT: ${{ secrets.SERVER_PORT }}
+          NODE_ENV: ${{ secrets.NODE_ENV }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          CORS_ORIGIN: ${{ secrets.CORS_ORIGIN }}
+        run: |
+          echo "PORT=$SERVER_PORT" >> env/.env.local
+          echo "NODE_ENV='$NODE_ENV'" >> env/.env.local
+          echo "DATABASE_URL='$DATABASE_URL'" >> env/.env.local
+          echo "CORS_ORIGIN='$CORS_ORIGIN'" >> env/.env.local
+
   e2e-test:
     runs-on: self-hosted
-    needs: install
+    needs: [install, set-env, prisma-generate]
     steps:
       - name: Test
-        run: |
-          pnpm run test:e2e
+        run: pnpm run test:e2e
 
   build:
     runs-on: self-hosted
     needs: e2e-test
     steps:
       - name: Build
-        run: |
-          pnpm run build
+        run: pnpm run build
 
   run-server:
     runs-on: self-hosted
     needs: build
     steps:
       - name: Run server
-        run: |
-          pm2 reload ecosystem.config.js
+        run: pm2 reload ecosystem.config.js
