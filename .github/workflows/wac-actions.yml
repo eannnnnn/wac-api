@@ -29,6 +29,7 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           CORS_ORIGIN: ${{ secrets.CORS_ORIGIN }}
         run: |
+          rm -rf env/.env.local
           echo "PORT=$SERVER_PORT" >> env/.env.local
           echo "NODE_ENV='$NODE_ENV'" >> env/.env.local
           echo "DATABASE_URL='$DATABASE_URL'" >> env/.env.local
