@@ -18,13 +18,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-  prisma-generate:
-    runs-on: self-hosted
-    needs: checkout
-    steps:
-      - name: Generate Prisma Client
-        run: npx prisma generate
-
   set-env:
     runs-on: self-hosted
     needs: checkout
@@ -41,9 +34,16 @@ jobs:
           echo "DATABASE_URL='$DATABASE_URL'" >> env/.env.local
           echo "CORS_ORIGIN='$CORS_ORIGIN'" >> env/.env.local
 
+  prisma-generate:
+    runs-on: self-hosted
+    needs: install
+    steps:
+      - name: Generate Prisma Client
+        run: pnpm run generate
+
   e2e-test:
     runs-on: self-hosted
-    needs: [install, set-env, prisma-generate]
+    needs: [set-env, prisma-generate]
     steps:
       - name: Test
         run: pnpm run test:e2e
