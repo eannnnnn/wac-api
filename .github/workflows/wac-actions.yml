@@ -29,6 +29,10 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           CORS_ORIGIN: ${{ secrets.CORS_ORIGIN }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          REDIS_HOST: ${{ secrets.REDIS_HOST }}
+          REDIS_PORT: ${{ secrets.REDIS_PORT }}
+          REDIS_USERNAME: ${{ secrets.REDIS_USERNAME }}
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
         run: |
           rm -rf env/.env.local
           echo "PORT=$SERVER_PORT" >> env/.env.local
@@ -36,6 +40,10 @@ jobs:
           echo "DATABASE_URL='$DATABASE_URL'" >> env/.env.local
           echo "CORS_ORIGIN='$CORS_ORIGIN'" >> env/.env.local
           echo "JWT_SECRET='$JWT_SECRET'" >> env/.env.local
+          echo "REDIS_HOST='$REDIS_HOST'" >> env/.env.local
+          echo "REDIS_PORT='$REDIS_PORT'" >> env/.env.local
+          echo "REDIS_USERNAME='$REDIS_USERNAME'" >> env/.env.local
+          echo "REDIS_PASSWORD='$REDIS_PASSWORD'" >> env/.env.local
 
   prisma-generate:
     runs-on: self-hosted
