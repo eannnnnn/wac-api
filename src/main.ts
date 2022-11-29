@@ -1,39 +1,24 @@
-import compression from '@fastify/compress';
-import fastifyHelmet from '@fastify/helmet';
 import { NestFactory } from '@nestjs/core';
-import {
-  FastifyAdapter,
-  NestFastifyApplication,
-} from '@nestjs/platform-fastify';
+import type { NestFastifyApplication } from '@nestjs/platform-fastify';
+import { FastifyAdapter } from '@nestjs/platform-fastify';
 import { AppModule } from './app.module';
+import { initializeApp } from './initialize/initiallize-app';
 import { ConfigService } from './modules/config/config.service';
+import { onClosePm2Event, sendPm2ReadSignal } from './pm2/pm2';
 
 async function runApp() {
-  const app = await NestFactory.create<NestFastifyApplication>(
-    AppModule,
-    new FastifyAdapter(),
-  );
+  const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
+  const configService = app.get(ConfigService);
+  const port = configService.get('PORT');
 
-  await registerApp(app);
-  await corsApp(app);
-  const configService = app.get(ConfigService);
-  await app.listen(configService.get('PORT'), '0.0.0.0');
-  process.send?.('ready');
-}
-// Cors Setup
-async function corsApp(app: NestFastifyApplication) {
-  const configService = app.get(ConfigService);
-  const corsOrigin = configService.get('CORS_ORIGIN');
-  app.enableCors({
-    origin: corsOrigin.split(' '),
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    maxAge: 600, // 10 minutes
-  });
-}
-// Register MiddleWarers
-async function registerApp(app: NestFastifyApplication) {
-  await app.register(fastifyHelmet);
-  await app.register(compression, { encodings: ['gzip', 'deflate'] });
+  await initializeApp(app);
+  await app.listen(port, '0.0.0.0');
+
+  // PM2
+  if (configService.get('NODE_ENV') === 'production') {
+    onClosePm2Event(app);
+    sendPm2ReadSignal();
+  }
 }
 
 runApp();
