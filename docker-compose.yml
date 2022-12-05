@@ -1,0 +1,15 @@
+version: '3.9'
+services:
+  db:
+    image: postgres
+    restart: unless-stopped
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_PASSWORD: postgres # change password
+
+  redis:
+    image: 'redis:alpine'
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
