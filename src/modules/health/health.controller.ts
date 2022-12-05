@@ -20,9 +20,7 @@ export class HealthController {
 
   @Get('/redis')
   async redis() {
-    await this.redisService.setJson('hi3', {
-      bv: 2,
-    });
-    return this.redisService.getJson('hi2');
+    await this.redisService.set('hi3', 'bye');
+    return this.redisService.get('hi');
   }
 }

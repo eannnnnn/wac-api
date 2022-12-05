@@ -9,21 +9,11 @@ export class RedisService implements OnApplicationShutdown {
     this.redisClient.disconnect();
   }
 
-  async getJson(key: string, path = '.') {
-    return this.redisClient.json.get(key, {
-      path: path,
-    });
-  }
-
   async get(key: string) {
     return this.redisClient.get(key);
   }
 
   async set(key: string, value: string) {
     return this.redisClient.set(key, value);
-  }
-
-  async setJson<T>(key: string, value: Record<string, T>, path = '.') {
-    return this.redisClient.json.set(key, path, value as any);
   }
 }
