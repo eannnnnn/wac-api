@@ -6,6 +6,7 @@
   "license": "MIT",
   "scripts": {
     "generate": "prisma generate",
+    "migrate": "prisma migrate dev",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
