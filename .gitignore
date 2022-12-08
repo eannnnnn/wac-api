@@ -400,3 +400,6 @@ dist
 env/*
 # 제외
 !.env.template
+
+prisma/*
+!prisma/schema.prisma

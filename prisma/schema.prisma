@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,24 +7,29 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+//#region User Model
 model User {
   id        BigInt   @id @default(autoincrement())
   email     String   @unique
+  name      String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  Profile     Profile?
-  Password    Password[]
-  UserSignLog UserSignLog[]
+  passwords     Password[]
+  userSignLogs  UserSignLog[]
+  calendarUsers CalendarUser[]
+  events        Event[]
+  calendars     Calendar[]
 }
 
 model Password {
   id        BigInt   @id @default(autoincrement())
   userId    BigInt
   hash      String
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model UserSignLog {
@@ -36,13 +38,115 @@ model UserSignLog {
   isFailed  Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model Profile {
-  id     BigInt  @id @default(autoincrement())
-  name   String  @unique
-  userId BigInt? @unique
-
-  user User? @relation(fields: [userId], references: [id])
+model EmailVerification {
+  id         BigInt   @id @default(autoincrement())
+  email      String
+  code       String
+  isVerified Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
+
+//#endregion
+
+//#region Common
+model File {
+  id        BigInt   @id @default(autoincrement())
+  name      String
+  hash      String
+  path      String
+  status    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+//#endregion
+
+//#region Calendar Model
+model Calendar {
+  id        BigInt   @id @default(autoincrement())
+  title     String
+  memo      String
+  userId    BigInt?
+  createdAt DateTime @default(now())
+
+  user   User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  events Event[]
+  users  CalendarUser[]
+}
+
+model CalendarUser {
+  id         BigInt   @id @default(autoincrement())
+  calendarId BigInt
+  userId     BigInt
+  color      String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  calendar Calendar @relation(fields: [calendarId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([calendarId, userId])
+}
+
+model Event {
+  id            BigInt    @id @unique(sort: Desc) @default(autoincrement())
+  calendarId    BigInt
+  userId        BigInt?
+  targetEventId BigInt?
+  summary       String
+  description   String?
+  isAllDay      Boolean   @default(false)
+  start         DateTime
+  end           DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  alarmTrigger  String?
+
+  calendar    Calendar     @relation(fields: [calendarId], references: [id], onDelete: Cascade)
+  user        User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  repeat      RepeatEvent?
+  targetEvent Event?       @relation("EventToEvent", fields: [targetEventId], references: [id], onDelete: SetNull) // 덮어 쓴 일정
+  coverEvents Event[]      @relation("EventToEvent") // 덮어 씌워진 일정들
+  AlrmSend    AlrmSend[]
+
+  @@index([calendarId, userId])
+}
+
+enum FreqType {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+model RepeatEvent {
+  eventId    BigInt     @id @unique
+  freq       FreqType
+  interval   Int
+  byMonth    Int?
+  byDay      String[]
+  byMonthDay String[]
+  until      DateTime?
+  hideDate   DateTime[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+model AlrmSend {
+  id        BigInt   @id @default(autoincrement())
+  eventId   BigInt
+  isSend    Boolean  @default(false)
+  sendAt    DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+//#endregion
