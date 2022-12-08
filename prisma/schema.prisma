@@ -96,32 +96,55 @@ model Event {
   id            BigInt    @id @unique(sort: Desc) @default(autoincrement())
   calendarId    BigInt
   userId        BigInt?
-  targetEventId BigInt? // 부모 이벤트 키
-  title         String
-  memo          String?
+  targetEventId BigInt?
+  summary       String
+  description   String?
   isAllDay      Boolean   @default(false)
   start         DateTime
   end           DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  alarmTrigger  String?
 
   calendar    Calendar     @relation(fields: [calendarId], references: [id], onDelete: Cascade)
   user        User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
   repeat      RepeatEvent?
   targetEvent Event?       @relation("EventToEvent", fields: [targetEventId], references: [id], onDelete: SetNull) // 덮어 쓴 일정
   coverEvents Event[]      @relation("EventToEvent") // 덮어 씌워진 일정들
+  AlrmSend    AlrmSend[]
 
   @@index([calendarId, userId])
 }
 
+enum FreqType {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
 model RepeatEvent {
-  eventId      BigInt   @id @unique
-  repeatType   String // D - Day, W - Week, M - Month, Y - Year
-  repeatNumber Int
-  byWeek       Int?
-  byDay        Int?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  eventId    BigInt     @id @unique
+  freq       FreqType
+  interval   Int
+  byMonth    Int?
+  byDay      String[]
+  byMonthDay String[]
+  until      DateTime?
+  hideDate   DateTime[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+model AlrmSend {
+  id        BigInt   @id @default(autoincrement())
+  eventId   BigInt
+  isSend    Boolean  @default(false)
+  sendAt    DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
 }
